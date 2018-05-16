@@ -1,0 +1,61 @@
+---
+title: "Basic  Plotting in R"
+author: "Caileigh Shoot"
+date: "3/31/2018"
+output: html_document
+---
+
+#### Let's load in a dataset. The Iris dataset is built in to R, so we only need to use the "data" function to call it.
+
+```{r}
+
+library(knitr)
+data(iris)
+kable(head(iris, 25))
+
+```
+#### Let's use this iris data to make a few basic plots
+
+Try `?plot` in the R console.
+
+```{r}
+
+plot(iris$Sepal.Length, iris$Sepal.Width)
+
+```
+
+```{r}
+
+hist(iris$Sepal.Length)
+
+```
+
+#### Let's add some more information to the plots
+
+```{r}
+
+plot(iris$Sepal.Length, iris$Sepal.Width, 
+     main = "Sepal Length vs. Width", # Add a title
+     xlab = "Sepal Length", ## Add x and y lables 
+     ylab = "Sepal Width") 
+
+```
+
+#### That's a bit better... Now let's try something more fun. 
+
+The par function allows you to specify graphical parameters from colors to symbols... This plot demonstrates some of the things you can do by specifying par arguments in the plot function
+
+Try `?par` in the R console.
+
+```{r}
+
+plot(1:25, 
+     cex  = 3, # A numerical value giving the amount by which plotting text and symbols should be magnified relative to the default. 
+     lwd  = 3, # The line width, a positive number, defaulting to 1.
+     pch  = 1:25, # Either an integer specifying a symbol or a single character to be used as the default in plotting points. 
+     col  = rainbow(25), # A specification for the default plotting color. See section ‘Color Specification’.
+     bg   = c(rep(NA, 20), terrain.colors(5)), # The color to be used for the background of the device region.
+     main = "plot(1:25, pch = 1:25, ...)" # Title of the plot
+)
+
+```

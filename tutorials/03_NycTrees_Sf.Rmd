@@ -1,0 +1,199 @@
+---
+title: 'NYC Street Trees Analysis using `sf`'
+author: "Jason Taylor"
+output: html_document
+---
+
+```{r setup, echo = FALSE}
+
+set.seed(1)
+
+```
+
+This tutorial will look use a street tree survey from 2015 in New York City.
+
+First let's load the libraries we will need. We will use `sf`, `mapview`, and `ggplot2`.
+
+```{r, message = F}
+
+library(sf)
+library(magrittr)
+library(tibble)
+library(ggplot2)
+
+```
+
+First, load in some data. These data werepulled from the Open Data NYC website. 
+
+We will read in our tabular data from an RDS file. The original csv was quite large. The RDS file is compressed and optimized for loading.
+
+```{r}
+
+## read in parcel data
+treeSurvey <- readRDS("./data/2015_Street_Tree_Census_-_Tree_Data.rds")
+## read in borough polygons
+boroBounds <- read_sf("./data/BoroughBoundaries/BoroughBoundaries.shp")
+## define color ramp
+colrmp <- colorRampPalette(c("cadetblue3", "gold", "firebrick"))
+
+```
+
+It's easy to preview the data printing various facets to the terminal.
+
+* `names`: View all the column names of the table.
+* `nrow `: Get a total of the rows.
+
+```{r}
+
+names(treeSurvey)
+nrow(treeSurvey)
+
+```
+
+We can check if the longitude and latitude fields have NA values or if the values in that field are in the expected range (not mixing northings and eastings), by reviewing a summary of those fields using the `summary` function.
+
+```{r}
+
+summary(treeSurvey$longitude)
+summary(treeSurvey$latitude)
+
+```
+
+We see that there are no NA values in the dataset and the coordinates are appropriate for New York City.
+
+Now that we have our data loaded, we will convert the tabular data containing the tree survey to a spatial points data type. This is done using the `st_as_sf` function. We will set the arguments for the coordinates and the coordinate reference. We will assume the coordinate reference system is in WGS 84 and we will transfrom that to New York State Plane.
+
+```{r}
+
+## convert tabular data to spatial data type
+tcSf <- st_as_sf(treeSurvey, coords = c("longitude", "latitude"), crs = 4326)
+tcSf <- st_transform(tcSf, 2908)
+boroBounds <- st_transform(boroBounds, 2908)
+
+```
+
+#### Number of trees found in each cell of a spatial grid 
+
+See `?geos_binary_ops` and `?st_make_grid`.
+
+Create a spatial grid at 1 mile x 1 mile cell sizes, and count the number of trees trees in each grid cell. Then plot the cells and symbolizes on count.
+
+```{r}
+
+tcSf$spc_common <- gsub("'", "", tcSf$spc_common)
+tcSf <- tcSf[tcSf$spc_common != "",]
+
+treeGrid <- st_sf(geometry = st_make_grid(tcSf, 5280))
+treeGrid$treeInt <- st_intersects(treeGrid, tcSf)
+
+getSpecies <- function(treeInt){
+    concatValue <- tcSf[treeInt,]$spc_common %>%
+        unique() %>%
+        sort() %>%
+        paste(collapse = ", ")
+    return(concatValue)
+}
+
+countSpecies <- function(species){
+    countSpecies <- strsplit(species, ", ") %>%
+        unlist() %>%
+        length()
+    return(countSpecies)
+}
+
+treeGrid$spc_names <- sapply(treeGrid$treeInt,   getSpecies)
+treeGrid$spc_count <- sapply(treeGrid$spc_names, countSpecies)
+
+treeGrid$treeInt <- NULL
+
+plot(treeGrid["spc_count"],
+     main = "Species Counts per Grid Cell",
+     pal = colrmp)
+plot(boroBounds$geometry, add = T)
+
+```
+
+#### Rare tree species count in grid.
+
+Find the top 10 most rare species street tree species, then plot those counts in the spatial grid. 
+
+```{r}
+
+countRareSpecies <- function(species){
+    species <- unlist(strsplit(species, ", "))
+    return(length(which(species %in% rareSpecies)))
+}
+
+speciesCounts       <- data.frame(table(tcSf$spc_common))
+rareSpecies         <- speciesCounts[order(speciesCounts$Freq),][1:10,]$Var1
+treeGrid$rare_count <- sapply(treeGrid$spc_name, countRareSpecies)
+
+plot(treeGrid["rare_count"],
+     main = "Counts of Rare Trees",
+     pal = colrmp)
+plot(boroBounds$geometry, add = T)
+
+```
+
+#### Voronoi diagram (Thiessen polygons) of rare species.
+
+See `?geos_unary`.
+
+Make a Voronio diagram of the rare species of trees and clip those polygons to the borough boundaries.
+
+```{r}
+
+rareTrees <- tcSf[tcSf$spc_common %in% rareSpecies,]
+
+voro <- rareTrees$geometry %>%
+    st_union() %>%
+    st_voronoi() %>%
+    st_collection_extract()
+
+voro <- st_sf(spc_common = rareTrees$spc_common[as.numeric(st_intersects(voro, rareTrees))],
+              geometry = voro)
+voro <- st_intersection(voro, boroBounds)
+
+plot(voro["spc_common"], main = "Rare Tree Voronio Polygons", key.size = lcm(4.5))
+
+```
+
+#### Convex hull of each rare species.
+
+Calculate the convex hull of each rare species. Find the species with the smallest convex hull.
+
+```{r}
+
+ggplot(data = rareTrees) +
+    geom_bar(aes(x = spc_common)) +
+    coord_flip()
+
+convexRare <- function(species){
+    rareTree   <- rareTrees[rareTrees$spc_common == species,]
+    rareTree   <- st_combine(rareTree)
+    rareConvex <- st_convex_hull(rareTree)
+    return(rareConvex)
+}
+
+rareTreesCon <- st_sf(spc_common = as.character(rareSpecies),
+                         geometry   = do.call("c", lapply(rareSpecies, convexRare)))
+rareTreesCon$area_sqft <- st_area(rareTreesCon)
+
+ggplot(data = rareTreesCon) +
+    geom_col(aes(x = spc_common, y = as.numeric(area_sqft))) +
+    coord_flip()
+
+smallConHull <- rareTreesCon$spc_common[rareTreesCon$area_sqft == min(rareTreesCon$area_sqft)]
+
+plot(voro["spc_common"],
+     main = paste("Convex Hull of", smallConHull),
+     key.size = lcm(4.5))
+plot(rareTreesCon[rareTreesCon$spc_common == smallConHull, "spc_common"] ,
+     col = NA,
+     lwd = 2,
+     add = T)
+plot(tcSf[tcSf$spc_common == smallConHull,"spc_common"],
+     col = "black",
+     add = T)
+
+```

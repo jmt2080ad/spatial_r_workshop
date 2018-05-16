@@ -1,0 +1,13 @@
+* Data sources
+
+2015_Street_Tree_Census_-_Tree_Data.csv
+https://data.cityofnewyork.us/Environment/2015-Street-Tree-Census-Tree-Data/uvpi-gqnh
+
+Revised_Notice_of_Property_Value__RNOPV_.csv
+https://data.cityofnewyork.us/City-Government/Revised-Notice-of-Property-Value-RNOPV-/8vgb-zm6e
+
+ParkProperties
+https://data.cityofnewyork.us/City-Government/Parks-Properties/rjaj-zgq7
+
+BoroughBoundaries
+https://data.cityofnewyork.us/City-Government/Borough-Boundaries/tqmj-j8zm

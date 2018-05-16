@@ -1,0 +1,146 @@
+---
+title: Intro To R
+fontsize: 9pt
+output:
+  beamer_presentation:
+    theme: "Dresden"
+    colortheme: "rose"
+    fonttheme: "professionalfonts"
+---
+
+## Packages for Geospatial Analysis
+There are MANY packages for geospatial analysis in R, weather you are working with Raster or Vector data. 
+
+- For rasters, the `raster` package makes for easy raster analysis
+- For vectors, the `rgdal` and `sp` packages allow for data to be easily read in and manipulated
+- For visualization, the `mapview` packages allows users to display their data on OSM maps 
+
+
+## Reading in Raster Data
+
+```{r, message=FALSE}
+require(raster)
+setwd("D:/Dropbox/WaURISA_Workshops/GeoR/")
+
+seattle <- raster("data/Seattle_NAIP.tif", band = 1)
+```
+
+This assigns the first band of 4-band NAIP image to an object we've titled "seattle". We can use this object to visualize the data...
+
+## Plotting Raster Data with plot() Function
+
+```{r}
+plot(seattle)
+```
+
+## Reading in Multi-Band Rasters 
+
+```{r}
+seattle_4band <- brick("data/Seattle_NAIP.tif")
+```
+
+Raster bricks and stacks are important components of the raster package that allow us to read in multiple bands of a raster. 
+
+A raster brick is one multi-layer file or object which is loaded into memory.
+- Faster and more efficient processing
+
+A raster stack can be "virtually" connected to multiple raster objects that are written to different files in memory.
+- Can performed pixel-based calculations on separate raster layers 
+
+## Plotting RGB Raster Data 
+```{r}
+plotRGB(seattle_4band, r = 1, g = 2, b = 3)
+```
+
+## Do Raster Calculations
+We may all be familiar with the infamous "raster calculators" in our favorite GIS applications. Often times we need to do some manipulation with our raster data sets, weather it's multiplying all the values by 2, or subtracting the values of one raster from another. 
+
+R makes it EXTREMELY easy to manipulate your rasters and perform calculations. Here we calculate the NDVI from our raster stack. NDVI is a way of measuring vegetation health using the red and near infrared bands of multispectral images.
+
+```{r}
+NDVI <- (seattle_4band$Seattle_NAIP.4 - 
+           seattle_4band$Seattle_NAIP.1)/
+        (seattle_4band$Seattle_NAIP.4 + 
+           seattle_4band$Seattle_NAIP.1)
+```
+
+## Do Raster Calculations
+```{r}
+plot(NDVI)
+```
+
+## Reading in Vector Data
+Points, Lines, and Polygons are common forms of vector data that we may use on a day-to-day basis in spatial analysis. There are two primary packages for reading in vector data that are used by frequent R users: the `sp` and `rgdal` packages.
+
+You may be familiar with `gdal` if you are familiar with python. Rgdal is gdal adapted for use in r. The `gdalUtils` package also provides access to all gdal functions and arguments.
+
+The `readOGR` function is the primary function used for reading in vector data... But it should be noted that this function is a bit complicated. Luckily, the folks that created the raster package helped to simplify this by creating a wrap-around function called `shapefile` which more easily reads in shapefiles. They both do essentially the same job...
+
+
+## Reading in Vector Data
+```{r, message=FALSE}
+require(rgdal)
+require(sp)
+require(raster)
+```
+
+```{r}
+trees <- shapefile("data/alkiTrees_UTM.shp")
+class(trees)
+```
+
+## Reading in Vector Data
+```{r}
+trees2 <- readOGR(dsn = "data", layer = "alkiTrees_UTM")
+class(trees2)
+```
+
+## Reading in Vector Data
+When the data is read in by either the `shapefile` function or the `readOGR` function, the result is a "SpatialPointsDataFrame", an `sp` object! 
+
+This is because the `rgdal` package requires the `sp` package to work. 
+
+Essentially, `sp` provides a framework for storing data, and `rgdal` provides a framework for reading and writing data.
+
+## How Vector data is stored in `sp`
+You may have noticed the term "SpatialPointsDataFrame" contains **data frame**... 
+This is because the data is stored in a data frame object that contains additional geospatial information. 
+
+```{r}
+head(trees@data)
+```
+
+## What is in a spatial points data frame?
+```{r}
+trees
+```
+
+## What is in a spatial points data frame?
+```{r}
+str(trees)
+```
+
+## Spatial Pixels Data Frames
+```{r}
+seattle_4band.sp <- as(seattle_4band, "SpatialPixelsDataFrame")
+head(seattle_4band.sp@data)
+```
+
+## Spatial Pixels Data Frames
+These can be extremely useful when working with many bands (i.e. hyperspectral data) as they are more efficient to store than rasters. 
+
+I personally use these for building classification and/or regression models. Rather than having to extract the values for each cell, this format has everything in a nice and easy to access table.
+
+And, you can still plot the data!
+
+## Spatial Pixels Data Frames
+```{r}
+plot(seattle_4band.sp)
+```
+
+## What We Covered
+The `raster` package is a great way to read in raster objects, including multi-band rasters. But, when you start getting into larger multi-band rasters (i.e. hyperspectral data), it's best to switch to a "spatial pixels data frame" format, which is built into the `sp` package.
+
+For reading and manipulating vector data, we recommending using `rgdal` (remember the function `readOGR`) or the nice wraparound for `readOGR` which is built into the `raster` package (the function is called `shapefile`).
+
+Weather you are using `readOGR` or `shapefile`, the objects will be read in as "Spatial___DataFrame". Fill in the blank with pixels, points, or polygons. 

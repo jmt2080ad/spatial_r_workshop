@@ -1,0 +1,194 @@
+---
+title: 'I/O in R and Variable Binding'
+fontsize: 9pt
+output:
+  beamer_presentation:
+    theme: "Dresden"
+    colortheme: "rose"
+    fonttheme: "professionalfonts"
+---
+
+```{r, echo = F}
+
+set.seed(1)
+
+```
+
+# "`<-`" and "`=`"
+
+When binding a variable in R use "`<-`".
+
+```{r}
+
+x <- 2
+y <- 2
+x + y
+
+```
+
+# "`<-`" and "`=`"
+
+"`<-`" works both ways, but the reverse usage is uncommon and confusing.
+
+```{r}
+
+2 -> x
+2 -> y
+x + y
+
+```
+
+# "`<-`" and "`=`"
+
+"`=`" is typically used when assigning arguments in a function.
+
+```{r}
+
+fun <- function(x, y){
+    x + y
+}
+fun(x = 2, y = 2)
+
+```
+
+# Basic I/O
+
+I/O in R varies depending of the data. 
+
+R can connect to nearly any data source you can think of.
+
+```{r}
+
+myData <- data.frame(x = round(runif(1000, 1, 100), 2),
+                     y = round(runif(1000, 1, 100), 2),
+                     attr = sample(letters, 1000, replace = T))
+head(myData, 8)
+
+```
+
+# Basic I/O
+
+`read.csv` and `write.csv` are common and are fine for most tasks.
+
+```{r}
+
+write.csv(myData, "./slides_rmd/data/myData.csv", row.names = F)
+myData <- read.csv("./slides_rmd/data/myData.csv")
+head(myData, 8)
+
+```
+
+# Excel with `xlsx()`
+
+`xlsx()` is great for basic reading and writing to Excel.
+
+```{r}
+
+library(xlsx, quietly = T)
+write.xlsx(myData, "./slides_rmd/data/myData.xls", row.names = F)
+read.xlsx("./slides_rmd/data/myData.xls", 1)
+
+```
+
+# Spatial Vector Data
+
+```{r, message = F}
+
+library(sf, quietly = T)
+myData   <- read.csv("./slides_rmd/data/myData.csv")
+myDataSf <- st_as_sf(myData, coords = c("x", "y"))
+head(myDataSf)
+
+```
+
+# Spatial Vector Data
+
+```{r}
+
+plot(myDataSf)
+
+```
+
+# Spatial Vector Data
+
+```{r}
+
+write_sf(myDataSf,
+         "./slides_rmd/data/myDataSf.shp",
+         driver = "ESRI Shapefile")
+myDataSf <- read_sf("./slides_rmd/data/myDataSf.shp")
+
+```
+
+# Spatial Vector Data
+
+```{r}
+
+plot(myDataSf)
+
+```
+
+# Spatial Vector Data
+
+```{r}
+
+plot(myDataSf)
+
+```
+
+# Spatial Raster Data
+
+```{r, messages = F}
+
+library(raster, quietly = T)
+myMatrix <- matrix(sort(round(runif(10000, 1, 100))), nrow = 100)
+myRaster <- raster(myMatrix)
+
+```
+
+# Spatial Raster Data
+
+```{r}
+
+plot(myRaster)
+
+```
+
+# Spatial Raster Data
+
+```{r}
+
+writeRaster(myRaster,
+            "./slides_rmd/data/myRaster.tif",
+            overwrite = T)
+myRaster <- raster("./slides_rmd/data/myRaster.tif")
+
+```
+
+# Spatial Raster Data
+
+```{r}
+
+plot(myRaster)
+
+```
+
+# Saving R Objects
+
+`saveRDS()` and `readRDS()` are the preferred methods for saving R objects to disk when interoperability is not important.
+
+```{r}
+
+myRaster <- raster("./slides_rmd/data/myRaster.tif")
+saveRDS(myRaster, "./slides_rmd/data/myRaster.rds")
+
+```
+
+# Saving R Objects
+
+```{r}
+
+myRaster <- readRDS("./slides_rmd/data/myRaster.rds")
+class(myRaster)
+
+```

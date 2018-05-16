@@ -1,0 +1,147 @@
+---
+title: Outro
+fontsize: 9pt
+output:
+  beamer_presentation:
+    theme: "Dresden"
+    colortheme: "rose"
+    fonttheme: "professionalfonts"
+---
+
+```{r, echo = F}
+
+set.seed(1)
+
+```
+
+# You, Me, and NSE
+
+Non-standard evaluation is bananas!
+
+```{r}
+
+nseFun <- function(fruit){
+    fruit <- deparse(substitute(fruit))
+    if(grepl("bananas", fruit, ignore.case = T)){
+        return("Bananas!")
+    }
+    return("Not bananas...")
+}
+
+```
+
+```{r}
+
+nseFun(oranges)
+nseFun(bananas)
+
+```
+
+# `ggplot2` - Graphics using NSE
+
+Really fast plotting with ggplot2.
+
+```{r}
+
+library(ggplot2)
+dat <- data.frame(let = sample(letters[c(1:5,1:3,1:2)],
+                               100, replace = T),
+                  frm = sample(factor(c("This", "That", "Other")),
+                               100, replace = T))
+dat <- dat[order(dat$frm),]
+dat$val1 <- sort(rnorm(100, mean = 10))
+dat$val2 <- sort(rnorm(100, mean = 100, sd = 50))
+
+```
+
+# `ggplot2` - Graphics using NSE
+
+```{r, fig.height = 3}
+
+ggplot(dat) +
+    geom_line(aes(val1, val2)) + 
+    facet_wrap(~frm) +
+    theme_bw()
+
+```
+
+# tidyverse
+
+A whole suite of data procesing packages that allow for very readable, easy to write code.
+
+Includes ggplot2. Very easy and intuative for beginners.
+
+Write data processing using verb like syntax, chaining together a pipeline of data processing routines.
+
+```{r}
+
+suppressMessages(library(tidyverse))
+tib <- tibble(x = runif(10000, 1, 100),
+              y = runif(10000, 1, 100),
+              let = sample(letters[c(1:5,1:3)],
+                           10000, replace = T))
+
+```
+
+# tidyverse
+
+See how nicely it prints?
+
+```{r}
+
+tib
+
+```
+
+# tidyverse
+
+Pipe-lining with magrittr: `%>%`
+
+```{r}
+
+tib <- tib %>%
+    filter(let %in% c("a", "b", "c")) %>%
+    mutate(prod = x*y) -> tib
+
+tib
+
+```
+
+# data.table
+
+Super fast tabular data manipulation with a very succinct syntax.
+
+Building a `data.table` object is just like `data.frame`.
+
+```{r}
+
+suppressMessages(library(data.table)) 
+dt <- data.table(x = runif(10000, 1, 100),
+                 y = runif(10000, 1, 100),
+                 let = sample(letters[c(1:5,1:3)],
+                              10000, replace = T))
+
+```
+
+# data.table
+
+Interfacing with the object leverages NSE for quick, succinct coding. 
+
+Group by using the `by` argument, counting the grouped elements.
+
+```{r}
+
+dt[order(let), .N, by = let]
+
+```
+
+# data.table
+
+Assignment by reference.
+
+```{r}
+
+dt[, prod:=x*y]
+dt
+
+```

@@ -1,0 +1,10 @@
+Comments
+1. Basic Plotting and R markdown should go after the base R and functional programming sections.
+
+Questions
+1. why is Caileigh signed up for base R objects?
+
+Todo
+1. add sf to intro to spatial R.
+2. remove Basic R plotting.r from repo, we will use the rmd
+3. re-init public repo. move public repo to dev. delete orginal repo. 

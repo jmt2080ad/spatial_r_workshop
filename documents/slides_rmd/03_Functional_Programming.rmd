@@ -1,0 +1,341 @@
+---
+title: Functional Programming in R
+fontsize: 9pt
+output:
+  beamer_presentation:
+    theme: "Dresden"
+    colortheme: "rose"
+    fonttheme: "professionalfonts"
+---
+
+```{r echo = F}
+
+set.seed(1)
+knitr::opts_chunk$set(collapse = F)
+
+```
+
+# Functions in R
+
+* Functions in are treated just like any other data.
+* They are assigned to variables just like any other object. 
+* They can be passed to other functions as arguments and returned by other functions as output.
+* They can also be anonymous, meaning they can be passed as an argument with out being assigned to a variable.
+
+# `for` loops
+
+You are probably used to `for` loops:
+
+```{r, echo = T}
+
+myData <- c(1, 2, 3, 4, 5)
+for(i in 1:length(myData)){
+    myData[i] <- myData[i] + 1
+}
+myData
+
+```
+# Functional Programming Basics in R
+
+Alternatives to for loops when working with R objects.
+
+* Vectorized Operations
+* Functionals (High Order Functions)
+
+These abstract away the looping construct and pass those instruction's to often highly optimized code that does the looping for the user.
+
+# R objects are immutable (usually)
+
+> Internally, `x$a <- 2` is a combination of two steps: first construct a modified copy of `x`, then change the binding of `x` to the new object; the bindings change, but the original `x` does not. This makes R objects immutable: whenever it looks like you are modifying an object, you are actually creating a modified copy.
+
+> \~ Mutable Objects in R, Hadley Wickham 2010
+
+This means that objects in R can't usually be changed in place. For large objects, this can mean copying big pieces of memory to change small bits of an object.
+
+This is not true for all R objects but its a good rule of thumb to go by unless you know otherwise.
+
+# Vectorized Operations
+
+Vectorized operations simplify common looping tasks, and they are found everywhere in R.
+
+Create a second column that is one more than the first.
+
+```{r}
+
+myData <- 1:15
+for(i in 1:length(myData)){
+    myData[i] <-  myData[i] + 1
+}
+
+```
+
+This is a vectorized version of the same task.
+
+```{r}
+
+myData <- 1:15
+myData <- myData + 1
+
+```
+
+# Vector rule of recycling
+
+Vectors of short lengths are recycled. Warnings are thrown when the shorter vector is not a factor of the larger.
+
+```{r}
+
+a <- 1:10
+b <- c(2, 10)
+a * b
+
+a <- 1:10
+b <- 1:3
+a * b
+
+```
+# Functionals
+
+A function that takes an object and applys a function to each element of that object. 
+
+The function that is applied is passed as an argument. 
+
+In R these are commonly the *apply family of functions. 
+
+* apply - runs on the margins of 2D data
+* lapply - returns a list
+* sapply - returns a vector, if possible
+* mapply - multivariable lapply
+
+# Example
+
+* Assembles a vector of randomly uniform values,
+* define a function that will check a value,
+* then apply the function to the vector with sapply.
+
+```{r, include = F}
+
+set.seed(1)
+
+```
+```{r}
+
+ckFun <- function(x){
+    if(x > 50) return(x - 50)
+    return(x)
+}
+x <- round(runif(1000, 1, 100))
+print(head(x, 10))
+newx <- sapply(x, ckFun)
+print(head(newx, 10))
+
+```
+
+# A vectorized approach with `ifelse`
+
+You could also use the `ifelse` function as well. 
+
+This handy function checks if a statement is `TRUE` or `FALSE` then returns a result depending on the condition. 
+
+This would return the same results as the process on the previous slide.
+
+```{r}
+
+xnew <- ifelse(x > 50, x - 50, x)
+
+```
+
+# Benchmarking the different approaches
+
+We will compare the performance of these 3 approaches on a single vector and a column in a data frame.
+
+```{r}
+
+library(microbenchmark)
+
+vecLen <- 1000
+vec <- round(runif(vecLen, 1, 100))
+dat <- data.frame(col1 = vec)
+
+```
+
+# `for` loops 
+
+```{r}
+
+forV <- function(vec){
+    for(i in 1:length(vec)){
+        if(vec[i] > 50){
+            vec[i] <- vec[i] - 50
+        }
+    }
+    return(vec)
+}
+
+forD <- function(dat){
+    for(i in 1:nrow(dat)){
+        if(dat[i,1] > 50){
+            dat[i,2] <- dat[i,1] - 50
+        }
+    }
+    return(dat)
+}
+
+```
+
+# `sapply`
+
+```{r}
+ckFun <- function(x){
+    if(x > 50){
+        return(x - 50)
+    }
+    return(x)
+}
+
+funV <- function(vec){
+    return(sapply(vec, ckFun))
+}
+
+funD <- function(dat){
+    dat$col2 <- sapply(dat$col1, ckFun)
+    return(dat)
+}
+```
+
+# `ifelse`
+
+```{r}
+ifeV <- function(vec){
+    return(ifelse(vec > 50, vec - 50, vec))
+}
+
+ifeD <- function(dat){
+    dat$col2 <- ifelse(dat$col1 > 50,
+                       dat$col1 - 50,
+                       dat$col1)
+    return(dat)
+}
+```
+
+# Benchmark Results
+
+```{r, echo = F}
+
+res <- microbenchmark(forV(vec),
+                      forD(dat),
+                      funV(vec),
+                      funD(dat),
+                      ifeV(vec),
+                      ifeD(dat),
+                      times = 10)
+
+boxplot(res)
+
+```
+
+# More about apply functions
+
+`lapply`, `sapply`, and `mapply` are most common.
+
+# `lapply`
+
+`lapply` take a list or a vector as an input, applys a function to each element of the list, then returns a list.
+
+Here, we check each element of the list to see if it is numeric or not.
+
+```{r}
+
+myList <- list(1:5,
+               LETTERS[1:10],
+               c(T, F, T, T))
+lapply(myList, is.numeric)
+
+``` 
+
+# `lapply`
+
+Here, we use an anonymous function that checks if the element is numeric and if so sums the element, else it returns the element.
+
+```{r}
+
+lapply(myList, function(x) if(is.numeric(x)) sum(x) else x)
+
+``` 
+
+# `lapply`
+
+We can use lapply to subset list elements too.
+
+```{r}
+
+lapply(myList, '[', 1)
+
+``` 
+
+# `sapply`
+
+`sapply` simplifies the output of lapply. It'll return a vector instead of a list when it can.
+
+```{r}
+
+sapply(myList, '[', 1)
+class(sapply(myList, '[', 1))
+
+```
+
+# `sapply`
+
+```{r}
+
+sapply(myList, '[', 1:3)
+class(sapply(myList, '[', 1:3))
+
+```
+
+# `mapply`
+
+`mapply` is multi-variable apply. It can take functions with 2+ inputs and map variables to those inputs.
+
+```{r}
+
+letFun <- function() sample(c("A", "B", "C", "7"), 500, replace = T)
+slots <- data.frame(fst = letFun(), snd = letFun(), thd = letFun())
+print(head(slots))
+
+```
+
+# `mapply`
+
+```{r}
+
+slotFun <- function(fst, snd, thd){
+    if(fst == snd & snd == thd){
+        return(paste(fst, snd, thd))
+    } else {
+        return(NA)
+    }
+}
+runSlots <- mapply(slotFun, slots$fst, slots$snd, slots$thd)
+length(which(runSlots == "7 7 7"))
+
+```
+
+# `parallel`
+
+Now that you are thinking functionally, imagine this:
+
+A list of elements.
+
+A single funciton.
+
+Assign a portion of those element to each core and apply the function to those grouped elements.
+
+Re-assemble those elements once they are complete.
+
+```{r, echo = F}
+
+## Resources
+## [Functional Progamming - Advanced R](htt://adv-r.had.co.nz/Functional-programming.html)  
+## [A Practical Introduction To Functional Programming](https://maryrosecook.com/blog/post/a-practical-introduction-to-functional-programming)  
+
+```

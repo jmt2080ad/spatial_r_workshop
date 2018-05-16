@@ -1,0 +1,133 @@
+---
+title: "Raster and Sp Package - A quick Tutorial"
+author: "Caileigh Shoot"
+date: "3/31/2018"
+output: html_document
+---
+
+# Overview
+In this tutorial we will work with the raster and sp packages to read in raster and vector data and performa an operation that uses both datasets. In this case, we will use a 4-band NAIP image over seattle (https://earthexplorer.usgs.gov/metadata/5280/2469920/) to calculate the normalized difference vegetation index (NDVI) (https://en.wikipedia.org/wiki/Normalized_difference_vegetation_index). We will then use the seattle trees database (https://data.seattle.gov/dataset/Trees/xg4t-j322) to locate trees, and get the NDVI at that point from our NDVI raster. But before we do all that, we will need to do some data-prepping to convert a CSV file to a shapefile of tree locations. 
+
+Please let us know if you have any issues, feedback, or questions during this tutorial! 
+
+# Setup
+### Load Packages..
+
+```{r packages, message=FALSE, warning=FALSE, echo = FALSE}
+require(raster)
+require(rgdal)
+require(RColorBrewer)
+require(mapview)
+require(sp)
+require(data.table)
+```
+
+# Data Prep
+### Read in the Alki Data and convert it into a spatial object
+
+```{r alki_data}
+alki <- data.frame(read.csv("data/alki_trees.csv"))
+
+## This operation is sped up by using data.table's function fread()
+# alki <- fread("Data/alki_trees.csv")
+```
+
+```{r data_munging}
+coords <- as.character(alki$wkt_geom) ## SF reads wkt directly, SP does not :(... so we have to do all this!
+coords <- strsplit(coords, split = " ")
+lon <- gsub("[((]", "",lapply(coords, FUN = function(x) return(x[2])))
+lat <- gsub("[))]", "",lapply(coords, FUN = function(x) return(x[3])))
+
+alki$wkt_geom <- NULL
+
+alki <- data.frame("lon" = as.numeric(lon), "lat" = as.numeric(lat), "Common Name" = as.character(alki$COMMON_NAM))
+table(complete.cases(alki))
+
+coordinates(alki) <- ~lon + lat
+class(alki)
+proj4string(alki) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "
+```
+
+Did it work? Yes!
+
+```{r view_alki}
+mapView(alki, legend = TRUE)
+```
+
+### Now read in the raster data...
+
+```{r seattle_raster}
+seattle <- raster("data/Seattle_NAIP.tif", band = 1)
+```
+
+### Are these two datasets in the same projection? Nope. Let's fix that...
+
+```{r projection}
+proj4string(seattle)
+proj4string(alki)
+```
+
+### Reproject the shapefile with spTransform
+
+```{r reproject}
+alki_reproj <- spTransform(alki, crs(seattle))
+```
+
+### Now let's write that to a shapefile with writeOGR...
+
+```{r write_shapefile}
+# names(alki_reproj) <- strtrim(names(alki_reproj),10)
+writeOGR(alki_reproj, "data", 
+         "alkiTrees_UTM", driver="ESRI Shapefile", overwrite_layer = T)
+```
+
+Woohoo! We did some necessary pre-processing! Now, let's pretend we didn't do all that and start fresh...
+
+```{r clear_workspace}
+rm(list = ls())
+```
+
+# Get NDVI for Trees on Alki
+### Read in Shapefile
+
+```{r read_shapefile2}
+trees <- shapefile("data/alkiTrees_UTM.shp")
+```
+
+### Read in Raster as a "Brick"
+
+```{r read_raster2}
+sea <- brick("data/Seattle_NAIP.tif")
+## You could also read in a single band using raster("m_4712230_nw_10_1_20170815/m_4712230_nw_10_1_20170815.tif", band = 1)
+
+plotRGB(sea, r = 1, g = 2, b = 3)
+```
+
+### Calculate NDVI
+NDIV is calculated by:
+$NDVI = \frac{NIR - Red}{NIR + Red}$
+
+Note: This will take some time, so be patient. 
+
+```{r Make_NDVI}
+NDVI <- (sea$Seattle_NAIP.4 - sea$Seattle_NAIP.1)/(sea$Seattle_NAIP.4 + sea$Seattle_NAIP.1)
+plot(NDVI)
+```
+
+### Get the NDVI for each of our Trees!
+```{r get_NDVI}
+trees$NDVI <- extract(NDVI, trees)
+
+```
+Done!
+
+### Now let's plot it...
+
+```{r plot_NDVI}
+mapviewOptions(vector.palette = colorRampPalette(brewer.pal(11, "RdYlGn")),
+               layers.control.pos = "topright")
+
+mapView(trees, legend = T, zcol = "NDVI")
+```
+
+
