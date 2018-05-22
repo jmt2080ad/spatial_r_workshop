@@ -5,7 +5,7 @@
 ## Assign a vector with the following properties.
 ## * type numeric
 ## * 5 elements
-## Tip: See `c` for more info.
+## Tip: See `?c` for more info.
 
 
 
