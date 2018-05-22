@@ -12,7 +12,7 @@ set.seed(1)
 
 This tutorial will look use a street tree survey from 2015 in New York City.
 
-First let's load the libraries we will need. We will use `sf`, `mapview`, and `ggplot2`.
+First let's load the libraries we will need. We will use `sf`, `magrittr`, `tibble` and `ggplot2`.
 
 ```{r, message = F}
 
@@ -23,7 +23,7 @@ library(ggplot2)
 
 ```
 
-First, load in some data. These data werepulled from the Open Data NYC website. 
+First, load in some data. These data were pulled from the Open Data NYC website. 
 
 We will read in our tabular data from an RDS file. The original csv was quite large. The RDS file is compressed and optimized for loading.
 
@@ -61,7 +61,7 @@ summary(treeSurvey$latitude)
 
 We see that there are no NA values in the dataset and the coordinates are appropriate for New York City.
 
-Now that we have our data loaded, we will convert the tabular data containing the tree survey to a spatial points data type. This is done using the `st_as_sf` function. We will set the arguments for the coordinates and the coordinate reference. We will assume the coordinate reference system is in WGS 84 and we will transfrom that to New York State Plane.
+Now that we have our data loaded, we will convert the tabular data containing the tree survey to a spatial points data type. This is done using the `st_as_sf` function. We will set the arguments for the coordinates and the coordinate reference. We will assume the coordinate reference system is in WGS 84 and we will transform that to New York State Plane.
 
 ```{r}
 
@@ -160,7 +160,7 @@ plot(voro["spc_common"], main = "Rare Tree Voronio Polygons", key.size = lcm(4.5
 
 #### Convex hull of each rare species.
 
-Calculate the convex hull of each rare species. Find the species with the smallest convex hull.
+Calculate the convex hull of each rare species. Find the species with the smallest convex hull. 
 
 ```{r}
 
@@ -176,7 +176,7 @@ convexRare <- function(species){
 }
 
 rareTreesCon <- st_sf(spc_common = as.character(rareSpecies),
-                         geometry   = do.call("c", lapply(rareSpecies, convexRare)))
+                      geometry   = do.call("c", lapply(rareSpecies, convexRare)))
 rareTreesCon$area_sqft <- st_area(rareTreesCon)
 
 ggplot(data = rareTreesCon) +

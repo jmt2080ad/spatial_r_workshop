@@ -125,14 +125,13 @@ $(document).ready(function () {
 
 
 <p>This tutorial will look use a street tree survey from 2015 in New York City.</p>
-<p>First let’s load the libraries we will need. We will use <code>sf</code>, <code>mapview</code>, and <code>ggplot2</code>.</p>
+<p>First let’s load the libraries we will need. We will use <code>sf</code>, <code>magrittr</code>, <code>tibble</code> and <code>ggplot2</code>.</p>
 <pre class="r"><code>library(sf)
 library(magrittr)
 library(tibble)
 library(ggplot2)</code></pre>
-<p>Read in some data. This data was pulled from the Open Data NYC website.</p>
+<p>First, load in some data. These data were pulled from the Open Data NYC website.</p>
 <p>We will read in our tabular data from an RDS file. The original csv was quite large. The RDS file is compressed and optimized for loading.</p>
-<p>In this tutorial, we will start with tabular data that contains the coordinates and metadata for the NYC street tree survey.</p>
 <pre class="r"><code>## read in parcel data
 treeSurvey &lt;- readRDS(&quot;./data/2015_Street_Tree_Census_-_Tree_Data.rds&quot;)
 ## read in borough polygons
@@ -170,7 +169,7 @@ colrmp &lt;- colorRampPalette(c(&quot;cadetblue3&quot;, &quot;gold&quot;, &quot;
 <pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
 ##   40.50   40.63   40.70   40.70   40.76   40.91</code></pre>
 <p>We see that there are no NA values in the dataset and the coordinates are appropriate for New York City.</p>
-<p>Now that we have our data loaded, we will convert the tabular data containing the tree survey to a spatial points data type. This is done using the <code>st_as_sf</code> function. We will set the arguments for the coordinates and the coordinate reference. We will assume the coordinate reference system is in WGS 84 and we will transfrom that to New York State Plane.</p>
+<p>Now that we have our data loaded, we will convert the tabular data containing the tree survey to a spatial points data type. This is done using the <code>st_as_sf</code> function. We will set the arguments for the coordinates and the coordinate reference. We will assume the coordinate reference system is in WGS 84 and we will transform that to New York State Plane.</p>
 <pre class="r"><code>## convert tabular data to spatial data type
 tcSf &lt;- st_as_sf(treeSurvey, coords = c(&quot;longitude&quot;, &quot;latitude&quot;), crs = 4326)
 tcSf &lt;- st_transform(tcSf, 2908)
@@ -266,7 +265,7 @@ voro &lt;- st_intersection(voro, boroBounds)</code></pre>
 }
 
 rareTreesCon &lt;- st_sf(spc_common = as.character(rareSpecies),
-                         geometry   = do.call(&quot;c&quot;, lapply(rareSpecies, convexRare)))
+                      geometry   = do.call(&quot;c&quot;, lapply(rareSpecies, convexRare)))
 rareTreesCon$area_sqft &lt;- st_area(rareTreesCon)
 
 ggplot(data = rareTreesCon) +
