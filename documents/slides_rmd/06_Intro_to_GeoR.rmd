@@ -195,7 +195,7 @@ From the makers of `sp` comes `sf`. `sf` changes the class structure of spatial 
 * Faster operations, more flexible objects.
 * Geometries are represented as wkt/wkb, an international standard.
 
-[Simple Features on Wikipedia](https://en.wikipedia.org/wiki/Simple_Features])
+[Simple Features on Wikipedia](https://en.wikipedia.org/wiki/Simple_Features)
 
 ## `sf` - Simplifies the Workflow
 
@@ -206,6 +206,23 @@ From the makers of `sp` comes `sf`. `sf` changes the class structure of spatial 
 * deldir
 
 `sf` *does not* support rasters operations or classes. These are still handled by the `raster` library. Compatibility between the two libraries is spotty at the moment, but conversions between `sf` and `sp` objects are simple enough.
+
+## `sf` - Example
+
+```{r, messages = F}
+
+library(sf)
+trees_sf <- read_sf("../tutorials/data/alkiTrees_UTM.shp")
+
+```
+
+## `sf` - Example
+
+```{r}
+
+head(trees_sf, 5)
+
+```
 
 ## What We Covered
 
