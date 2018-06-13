@@ -6,7 +6,7 @@ Install RStudio via the instructions on the RStudio website:
 
 Run the following in your bash terminal:
 
-    sudo apt-get install libgdal-dev libudunits2-dev libgeos-dev libproj-devlibv8-3.14-dev 
+    sudo apt-get install libgdal-dev libudunits2-dev libgeos-dev libproj-dev libv8-3.14-dev 
     sudo apt-get install libjq-dev libssl-dev libprotobuf-dev protobuf-compiler
     sudo apt-get install pandoc default-jdk libfreetype6-dev libcairo2-dev
 
