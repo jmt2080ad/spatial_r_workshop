@@ -14,12 +14,14 @@ Please let us know if you have any issues, feedback, or questions during this tu
 ### Load Packages..
 
 ```{r packages, message=FALSE, warning=FALSE, echo = FALSE}
+
 require(raster)
 require(rgdal)
 require(RColorBrewer)
 require(mapview)
 require(sp)
 require(data.table)
+
 ```
 
 # Data Prep
@@ -33,6 +35,7 @@ alki <- data.frame(read.csv("data/alki_trees.csv"))
 ```
 
 ```{r data_munging}
+
 coords <- as.character(alki$wkt_geom) ## SF reads wkt directly, SP does not :(... so we have to do all this!
 coords <- strsplit(coords, split = " ")
 lon <- gsub("[((]", "",lapply(coords, FUN = function(x) return(x[2])))
@@ -46,6 +49,7 @@ table(complete.cases(alki))
 coordinates(alki) <- ~lon + lat
 class(alki)
 proj4string(alki) <- "+proj=longlat +ellps=WGS84 +datum=WGS84 +no_defs "
+
 ```
 
 Did it work? Yes!
@@ -97,10 +101,12 @@ trees <- shapefile("data/alkiTrees_UTM.shp")
 ### Read in Raster as a "Brick"
 
 ```{r read_raster2}
+
 sea <- brick("data/Seattle_NAIP.tif")
 ## You could also read in a single band using raster("m_4712230_nw_10_1_20170815/m_4712230_nw_10_1_20170815.tif", band = 1)
 
 plotRGB(sea, r = 1, g = 2, b = 3)
+
 ```
 
 ### Calculate NDVI
@@ -110,12 +116,15 @@ $NDVI = \frac{NIR - Red}{NIR + Red}$
 Note: This will take some time, so be patient. 
 
 ```{r Make_NDVI}
+
 NDVI <- (sea$Seattle_NAIP.4 - sea$Seattle_NAIP.1)/(sea$Seattle_NAIP.4 + sea$Seattle_NAIP.1)
 plot(NDVI)
+
 ```
 
 ### Get the NDVI for each of our Trees!
 ```{r get_NDVI}
+
 trees$NDVI <- extract(NDVI, trees)
 
 ```

@@ -8,7 +8,7 @@ Run the following in your bash terminal:
 
     sudo apt-get install libgdal-dev libv8-3.14-dev libjq-dev libssl-dev 
     sudo apt-get install libprotobuf-dev protobuf-compiler libudunits2-dev 
-    sudo apt-get install pandoc default-jdk
+    sudo apt-get install pandoc default-jdk libcairo2-dev
 
 You may need the ubuntu-gis repo added to your sources for some of these packages. Add this then try again if any are missing from your distro's repo:
 

@@ -17,7 +17,7 @@ knitr::opts_chunk$set(collapse = F)
 
 # Functions in R
 
-* Functions in are treated just like any other data.
+* Functions in R are treated just like any other data.
 * They are assigned to variables just like any other object. 
 * They can be passed to other functions as arguments and returned by other functions as output.
 * They can also be anonymous, meaning they can be passed as an argument with out being assigned to a variable.
@@ -42,7 +42,7 @@ Alternatives to for loops when working with R objects.
 * Vectorized Operations
 * Functionals (High Order Functions)
 
-These abstract away the looping construct and pass those instruction's to often highly optimized code that does the looping for the user.
+These abstract away the looping construct and pass those instructions to often highly optimized code that does the looping for the user.
 
 # R objects are immutable (usually)
 
@@ -56,7 +56,7 @@ This is not true for all R objects but its a good rule of thumb to go by unless 
 
 # Vectorized Operations
 
-Vectorized operations simplify common looping tasks, and they are found everywhere in R.
+Vectorized operations simplify common looping tasks and they are found everywhere in R.
 
 Create a second column that is one more than the first.
 
@@ -134,7 +134,7 @@ print(head(newx, 10))
 
 You could also use the `ifelse` function as well. 
 
-This handy function checks if a statement is `TRUE` or `FALSE` then returns a result depending on the condition. 
+This handy function checks if a statement is `TRUE` or `FALSE` for every element of a vector then returns a result depending on the condition. 
 
 This would return the same results as the process on the previous slide.
 
@@ -239,7 +239,7 @@ boxplot(res)
 
 # `lapply`
 
-`lapply` take a list or a vector as an input, applys a function to each element of the list, then returns a list.
+`lapply` take a list or a vector as an input, applys a function to each element, then returns a list.
 
 Here, we check each element of the list to see if it is numeric or not.
 
@@ -254,7 +254,7 @@ lapply(myList, is.numeric)
 
 # `lapply`
 
-Here, we use an anonymous function that checks if the element is numeric and if so sums the element, else it returns the element.
+Here, we use an anonymous function that checks if the element is numeric and if so sums the element, otherwise it returns the element.
 
 ```{r}
 
@@ -328,9 +328,9 @@ A list of elements.
 
 A single funciton.
 
-Assign a portion of those element to each core and apply the function to those grouped elements.
+Assign a portion of those element to each core of a processor and apply the function to those portions.
 
-Re-assemble those elements once they are complete.
+Re-assemble those elements into a single list once they are complete.
 
 ```{r, echo = F}
 

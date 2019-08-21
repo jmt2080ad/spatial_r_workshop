@@ -16,7 +16,7 @@ set.seed(1)
 
 # "`<-`" and "`=`"
 
-When binding a variable in R use "`<-`".
+When assigning a variable in R use "`<-`".
 
 ```{r}
 
@@ -75,18 +75,6 @@ head(myData, 8)
 write.csv(myData, "./slides_rmd/data/myData.csv", row.names = F)
 myData <- read.csv("./slides_rmd/data/myData.csv")
 head(myData, 8)
-
-```
-
-# Excel with `xlsx()`
-
-`xlsx()` is great for basic reading and writing to Excel.
-
-```{r}
-
-library(xlsx, quietly = T)
-write.xlsx(myData, "./slides_rmd/data/myData.xls", row.names = F)
-read.xlsx("./slides_rmd/data/myData.xls", 1)
 
 ```
 
